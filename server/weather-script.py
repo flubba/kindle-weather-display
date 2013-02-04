@@ -3,47 +3,41 @@
 # Kindle Weather Display
 # Matthew Petroff (http://www.mpetroff.net/)
 # September 2012
+# Reventlov Giskard (http://volcanis.me/)
 
-import urllib2
-from xml.dom import minidom
 import datetime
 import codecs
+import urllib2
+import json
 
-
-
-#
-# Download and parse weather data
-#
-
-# Fetch data (change lat and lon to desired location)
-weather_xml = urllib2.urlopen('http://graphical.weather.gov/xml/SOAP_server/ndfdSOAPclientByDay.php?whichClient=NDFDgenByDay&lat=39.3286&lon=-76.6169&format=24+hourly&numDays=4&Unit=e').read()
-dom = minidom.parseString(weather_xml)
-
-# Parse temperatures
-xml_temperatures = dom.getElementsByTagName('temperature')
 highs = [None]*4
 lows = [None]*4
-for item in xml_temperatures:
-    if item.getAttribute('type') == 'maximum':
-        values = item.getElementsByTagName('value')
-        for i in range(len(values)):
-            highs[i] = int(values[i].firstChild.nodeValue)
-    if item.getAttribute('type') == 'minimum':
-        values = item.getElementsByTagName('value')
-        for i in range(len(values)):
-            lows[i] = int(values[i].firstChild.nodeValue)
-
-# Parse icons
-xml_icons = dom.getElementsByTagName('icon-link')
 icons = [None]*4
-for i in range(len(xml_icons)):
-    icons[i] = xml_icons[i].firstChild.nodeValue.split('/')[-1].split('.')[0].rstrip('0123456789')
+
+weather_json = urllib2.urlopen('http://api.wunderground.com/api/PUT-API-KEY-HERE/forecast/q/PUT-CITY-HERE.json')
+json_string = weather_json.read()
+parsed_json = json.loads(json_string)
+
+highs[0] = parsed_json['forecast']['simpleforecast']['forecastday'][0]['high']['celsius']
+lows[0] = parsed_json['forecast']['simpleforecast']['forecastday'][0]['low']['celsius']
+icons[0] = parsed_json['forecast']['simpleforecast']['forecastday'][0]['icon']
+
+highs[1] = parsed_json['forecast']['simpleforecast']['forecastday'][1]['high']['celsius']
+lows[1] = parsed_json['forecast']['simpleforecast']['forecastday'][1]['low']['celsius']
+icons[1] = parsed_json['forecast']['simpleforecast']['forecastday'][1]['icon']
+
+highs[2] = parsed_json['forecast']['simpleforecast']['forecastday'][2]['high']['celsius']
+lows[2] = parsed_json['forecast']['simpleforecast']['forecastday'][2]['low']['celsius']
+icons[2] = parsed_json['forecast']['simpleforecast']['forecastday'][2]['icon']
+
+highs[3] = parsed_json['forecast']['simpleforecast']['forecastday'][3]['high']['celsius']
+lows[3] = parsed_json['forecast']['simpleforecast']['forecastday'][3]['low']['celsius']
+icons[3] = parsed_json['forecast']['simpleforecast']['forecastday'][3]['icon']
+
+weather_json.close()
 
 # Parse dates
-xml_day_one = dom.getElementsByTagName('start-valid-time')[0].firstChild.nodeValue[0:10]
-day_one = datetime.datetime.strptime(xml_day_one, '%Y-%m-%d')
-
-
+day_one = datetime.datetime.now()
 
 #
 # Preprocess SVG
